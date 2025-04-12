@@ -10,7 +10,10 @@ import { useToast } from "@/hooks/use-toast";
 interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList;
   resultIndex: number;
-  error: any;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
 }
 
 interface SpeechRecognitionResult {
@@ -39,7 +42,7 @@ interface SpeechRecognition extends EventTarget {
   onaudioend: ((this: SpeechRecognition, ev: Event) => any) | null;
   onaudiostart: ((this: SpeechRecognition, ev: Event) => any) | null;
   onend: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onerror: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => any) | null;
   onnomatch: ((this: SpeechRecognition, ev: Event) => any) | null;
   onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
   onsoundend: ((this: SpeechRecognition, ev: Event) => any) | null;
@@ -99,7 +102,7 @@ export default function ChatBot() {
         setInput(transcript);
       };
 
-      recognitionRef.current.onerror = (event) => {
+      recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error("Speech recognition error", event.error);
         setIsListening(false);
         toast({
