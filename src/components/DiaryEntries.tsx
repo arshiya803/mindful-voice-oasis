@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Edit, Trash, PlusCircle, Frown, Meh, Smile } from "lucide-react";
-import { useToast } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
 
 type MoodType = "happy" | "neutral" | "sad" | undefined;
 
@@ -33,12 +32,10 @@ export default function DiaryEntries() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  // Load entries from localStorage
   useEffect(() => {
     const savedEntries = localStorage.getItem("diaryEntries");
     if (savedEntries) {
       try {
-        // Convert date strings back to Date objects
         const parsedEntries = JSON.parse(savedEntries).map((entry: any) => ({
           ...entry,
           date: new Date(entry.date)
@@ -50,7 +47,6 @@ export default function DiaryEntries() {
     }
   }, []);
 
-  // Save entries to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem("diaryEntries", JSON.stringify(entries));
   }, [entries]);
@@ -66,7 +62,6 @@ export default function DiaryEntries() {
     }
 
     if (isEditing && currentEntryId) {
-      // Update existing entry
       setEntries(entries.map(entry => 
         entry.id === currentEntryId 
           ? { ...entry, title, content, date, mood } 
@@ -77,7 +72,6 @@ export default function DiaryEntries() {
         description: "Your diary entry has been updated successfully.",
       });
     } else {
-      // Add new entry
       const newEntry: DiaryEntry = {
         id: Date.now().toString(),
         title,
@@ -92,7 +86,6 @@ export default function DiaryEntries() {
       });
     }
 
-    // Reset form
     resetForm();
     setIsDialogOpen(false);
   };
@@ -133,7 +126,6 @@ export default function DiaryEntries() {
     }
   };
 
-  // Sort entries by date (newest first)
   const sortedEntries = [...entries].sort((a, b) => 
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
@@ -275,7 +267,113 @@ export default function DiaryEntries() {
                 <PlusCircle className="mr-2 h-4 w-4" /> Create Your First Entry
               </Button>
             </DialogTrigger>
-            {/* Dialog content is the same as above */}
+            <DialogContent className="sm:max-w-[550px]">
+              <DialogHeader>
+                <DialogTitle>New Diary Entry</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label htmlFor="title" className="text-sm font-medium">Title</label>
+                  <Input
+                    id="title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Entry title"
+                    className="focus-visible:ring-mindful-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Date</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal focus-visible:ring-mindful-500"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {date ? format(date, "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={(date) => date && setDate(date)}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">How are you feeling today?</label>
+                  <div className="flex justify-center space-x-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className={cn(
+                        "px-6 py-6", 
+                        mood === "happy" && "bg-green-100 border-green-500"
+                      )}
+                      onClick={() => setMood("happy")}
+                    >
+                      <Smile size={32} className={cn(
+                        "text-gray-400",
+                        mood === "happy" && "text-green-500"
+                      )} />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className={cn(
+                        "px-6 py-6", 
+                        mood === "neutral" && "bg-amber-100 border-amber-500"
+                      )}
+                      onClick={() => setMood("neutral")}
+                    >
+                      <Meh size={32} className={cn(
+                        "text-gray-400",
+                        mood === "neutral" && "text-amber-500"
+                      )} />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className={cn(
+                        "px-6 py-6", 
+                        mood === "sad" && "bg-rose-100 border-rose-500"
+                      )}
+                      onClick={() => setMood("sad")}
+                    >
+                      <Frown size={32} className={cn(
+                        "text-gray-400",
+                        mood === "sad" && "text-rose-500"
+                      )} />
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="content" className="text-sm font-medium">Content</label>
+                  <Textarea
+                    id="content"
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    placeholder="Write about your thoughts and feelings..."
+                    className="min-h-[120px] focus-visible:ring-mindful-500"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button 
+                  className="bg-mindful-600 hover:bg-mindful-700"
+                  onClick={handleSubmitEntry}
+                >
+                  Save Entry
+                </Button>
+              </DialogFooter>
+            </DialogContent>
           </Dialog>
         </div>
       ) : (
